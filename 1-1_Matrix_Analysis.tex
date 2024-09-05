@@ -1,0 +1,592 @@
+\documentclass{article}
+%------------------------  中文 XeLaTex 套件  ------------------------%
+\usepackage{fontspec}   %加這個就可以設定字體
+\usepackage{xeCJK}       %讓中英文字體分開設置
+    \XeTeXlinebreaklocale "zh"             %這兩行一定要加，中文才能自動換行
+    \XeTeXlinebreakskip = 0pt plus 1pt     %這兩行一定要加，中文才能自動換行
+
+    \xeCJKsetup{CJKmath=true}
+
+    %\setCJKmainfont[AutoFakeBold=6,AutoFakeSlant=.4]{SourceHanSerifTC-Regular}  % 預設中文字型
+    \setCJKmainfont{Noto Sans CJK TC}
+    %\defaultCJKfontfeatures{AutoFakeBold=6,AutoFakeSlant=.4}   % 預設粗體粗度、斜體斜度
+    \newCJKfontfamily\Kai{cwTeXKai}        % 定義指令 \Kai 則切換成標楷體
+    \newCJKfontfamily\Hei{Noto Sans CJK TC}    % 定義指令 \Hei 則切換成正黑體
+    \newCJKfontfamily\NewMing{Noto Sans CJK TC}  % 定義指令 \NewMing 則切換成新細明體
+\linespread{1.2}
+
+% 版面配置
+\usepackage{geometry}
+    \geometry{a4paper, left= 2.2cm, right= 2.2cm, top= 3cm, bottom= 3cm}
+\setlength{\headheight}{14.49998pt}
+% 頁眉、頁尾格式
+\usepackage{fancyhdr} %頁眉、頁尾格式
+    \pagestyle{fancy}
+    \fancyhf{}
+    \rhead{\today} %加上日期
+    \cfoot{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+% 超連結樣式
+\usepackage[colorlinks= true, breaklinks= true, linkcolor= blue, citecolor= magenta, urlcolor= blue]{hyperref}
+% 參考文件引用
+\usepackage[space, nomove]{cite}
+% 更多顏色
+\usepackage{xcolor}
+% 標準數學套件
+\usepackage{amsmath, amsthm, amsfonts, amssymb}
+\usepackage{bm}
+\theoremstyle{definition}
+    \newtheorem{definition}{Definition}[section]
+    \newtheorem{theorem}{Theorem}[section]
+    \newtheorem{lemma}[theorem]{Lemma}
+    \newtheorem{corollary}[theorem]{Corollary}
+    \newtheorem{proposition}[theorem]{Proposition}
+    \newtheorem{remark}{Remark}
+    \newtheorem{conjecture}{Conjecture}[section]
+    \newtheorem{example}{Example}[section]
+% 方程式標號方式
+    \numberwithin{theorem}{section}
+    \numberwithin{equation}{section}
+%----   參照 套件  ----%
+\usepackage[capitalise]{cleveref}
+\crefname{enumi}{}{}
+\crefname{theorem}{Theorem}{Theorems}
+\crefname{lemma}{Lemma}{Lemmas}
+\crefname{corollary}{Corollary}{Corollaries}
+\crefname{proposition}{Proposition}{Propositions}
+\crefname{remark}{Remark}{Remarks}
+\crefrangeformat{enumi}{#3#1#4--#5#2#6}
+% 條列樣式
+\usepackage{enumitem}%
+    \renewcommand{\theenumi}{(\roman{enumi})}
+    \renewcommand{\theenumii}{(\alph{enumii})}
+    \renewcommand{\labelenumi}{(\roman{enumi})}
+    \renewcommand{\labelenumii}{(\alph{enumii})}
+% 標準圖片套件
+\usepackage{graphicx}
+\usepackage{epsfig, graphics}
+%\usepackage{epstopdf}
+% 圖片路徑
+%% \graphicspath{{./Figures/}}
+% 子圖
+\usepackage{subfigure}
+    \renewcommand{\figurename}{Fig.}
+    \renewcommand\thesubfigure{(\roman{subfigure})}
+% 圖片標題
+\usepackage[labelsep=period, labelfont=bf]{caption}
+
+
+
+\title{Matrix Computation}
+
+\author{Yu-Hao Liang}
+\date{September 2024}
+
+\begin{document}
+
+\maketitle
+\section{向量、矩陣、秩、正交、特殊矩陣、特徵值與特徵向量}
+
+\subsection{符號、基本定義與性質}
+
+Denote
+\[
+    A \in \mathbb{K}^{m \times n}, \text{ where } \mathbb{K} = \mathbb{R} \text{ or } \mathbb{C}
+    \Leftrightarrow
+    A = [a_{ij}] = \begin{bmatrix}
+    a_{11} & \cdots & a_{1n} \\
+    \vdots & \ddots & \vdots \\
+    a_{m1} & \cdots & a_{mn}
+    \end{bmatrix},
+    \quad a_{ij} \in \mathbb{K}.
+\]
+Then we define
+\begin{enumerate}
+    \item \textbf{Product of Matrices} [矩陣乘積] $(\mathbb{K}^{m \times n} \times \mathbb{K}^{n \times p} \to \mathbb{K}^{m \times p})$: Let $A\in \mathbb{K}^{m \times n}, B\in \mathbb{K}^{n \times p}$. Then  
+  \[
+    AB= C=[c_{ij}] \in \mathbb{K}^{m \times p} \quad\Longrightarrow \quad c_{ij} = \sum_{k=1}^{n} a_{ik} b_{kj},\quad \forall\; i = 1, \ldots, m,\; j = 1, \ldots, p
+   \]
+   \item  \textbf{Transpose} [轉置] $(\mathbb{R}^{m \times n} \to \mathbb{R}^{n \times m} )$:
+  \[
+   C = A^T, \;\; \text{where}\;\; c_{ij} = a_{ji} \in \mathbb{R}
+   \]
+   \item  \textbf{Conjugate transpose} [共軛轉置] $(\mathbb{C}^{m \times n} \to \mathbb{C}^{n \times m})$:
+  \[
+   C = A^* \text{ or } C = A^H. \;\; \text{where} \;\; c_{ij} = \overline{a_{ji}} \in \mathbb{C}
+   \]
+   \item\textbf{Differentiation} [微分] $(\mathbb{R}^{m \times n} \to \mathbb{R}^{m \times n})$:
+  \[
+   C(t) = [ c_{ij}(t) ] \quad \Longrightarrow \quad \dot{C}(t) = [\dot{c}_{ij}(t)]
+   \]
+    \item \textbf{Inverse} [反矩陣] $(\mathbb{K}^{m \times n} \to \mathbb{K}^{m \times n})$: If $A,B \in \mathbb{K}^{n \times n}$ satisfy $AB = I$, then $B$ is called the \textbf{inverse} of $A$ and is denoted by $A^{-1}$.
+  \begin{itemize}
+  \item    If $A^{-1}$ exists, then $A$ is said to be \textbf{nonsingular} [非奇異的] or \textbf{invertible} [可逆的]; otherwise, $A$ is \textbf{singular} [奇異的] or \textbf{not invertible} [不可逆的].
+  \item   It can be proved that $A$ is nonsingular $\Longleftrightarrow \det(A) \neq 0$.
+  \end{itemize}
+  \item \textbf{Inner product} [內積]: The inner product of $x,y \in \mathbb{K}^{n}$ is defined by
+   \begin{align*}
+   \langle x, y \rangle &:= x^T y = \sum_{i=1}^{n} x_i y_i = y^T x \in \mathbb{R},\\
+   \langle x, y \rangle &:= x^* y = \sum_{i=1}^{n} \overline{x_i} y_i = y^* x \in \mathbb{C},
+   \end{align*}
+   \item \textbf{Some basis operations}:
+  \begin{itemize}
+  \item Let $A \in \mathbb{K}^{m \times n}$ and $x \in \mathbb{K}^{n}$. Then
+    \begin{itemize}
+    \item Form 1:
+      \[
+        y= Ax \quad \Longrightarrow \quad y= [y_i],\;\; \text{where}\;\; y_i = \sum\limits_{j=1}^{n} a_{ij} x_j, \; i = 1, \ldots, m
+        \]
+    \item Form 2:
+      \[
+        y= Ax = \begin{bmatrix} v_1 \mid v_2 \mid \cdots \mid v_n \end{bmatrix} \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ v_n \end{bmatrix}
+         \quad \Longrightarrow \quad y= x_1 v_1+x_2 v_2+\cdots+x_n v_n.
+        \]
+    \item Form 3:
+      \[
+        y= Ax = \begin{bmatrix} r_1\\ r_2\\ \vdots \\ r_m\end{bmatrix} x
+         \quad \Longrightarrow \quad y= \begin{bmatrix} \langle r_1, x \rangle\\ \langle r_2, x \rangle\\ \vdots \\ \langle r_m, x \rangle\end{bmatrix}.
+        \]
+    \end{itemize}
+  \item    Let $x \in \mathbb{K}^{m}$ and $y \in \mathbb{K}^{n}$. Then
+    \[
+      xy^* = \begin{bmatrix}
+      x_1 \overline{y_1} & \cdots & x_1 \overline{y_n} \\
+      \vdots & \ddots & \vdots \\
+      x_m \overline{y_1} & \cdots & x_m \overline{y_n}
+      \end{bmatrix}
+      \in \mathbb{K}^{m \times n}.
+      \]
+  \end{itemize}
+\end{enumerate}
+
+
+\subsection{擾動下的反矩陣}
+
+\begin{theorem}[Sherman-Morrison Formula]
+Let $A \in \mathbb{R}^{n \times n}$ be nonsingular. Then, for any $u, v \in \mathbb{R}^n$, if $v^T A^{-1} u \neq -1$, then
+\[
+(A + uv^T)^{-1} = A^{-1} - \frac{A^{-1} u v^T A^{-1}}{1 + v^T A^{-1} u}.
+\]
+\end{theorem}
+
+\begin{proof}
+    \begin{align*}
+        &(A + uv^T) [A^{-1} - A^{-1} u (1 + v^T A^{-1} u)^{-1} v^T A^{-1}] \\
+        &= I + \frac{1}{1 + v^T A^{-1} u} [uv^T A^{-1} (1 + v^T A^{-1} u) - uv^T A^{-1} - uv^T A^{-1} uv^T A^{-1}] \\
+        &= I + \frac{1}{1 + v^T A^{-1} u} [u (v^T A^{-1} u) v^T A^{-1} - uv^T A^{-1} uv^T A^{-1}] = I.
+    \end{align*}
+\end{proof}
+
+\begin{theorem}[Sherman-Morrison-Woodbury Formula]
+    Let $A \in \mathbb{R}^{n \times n}$ be nonsingular. Then, for any $U, V \in \mathbb{R}^{n \times k}$, if $(I + V^T A^{-1} U)$ is invertible, then
+\[
+(A + UV^T)^{-1} = A^{-1} - A^{-1} U (I + V^T A^{-1} U)^{-1} V^T A^{-1}.
+\]
+\end{theorem}
+
+\begin{example}
+\[
+A = \begin{bmatrix}        3 & -1 & 1 & 1 & 1 \\        0 & 1 & 2 & 2 & 2 \\        0 & -1 & 4 & 1 & 1 \\        0 & 0 & 0 & 3 & 0 \\        0 & 0 & 0 & 0 & 3        \end{bmatrix} = B + \begin{bmatrix}        0 \\        0 \\        -1 \\        0 \\        0        \end{bmatrix} \begin{bmatrix}        0 & 1 & 0 & 0 & 0        \end{bmatrix}.
+\]
+\end{example}
+
+\subsection{秩與正交}  
+
+Let $A \in \mathbb{R}^{m \times n}$. Consider the mapping
+\begin{align*}
+T: \mathbb{R}^n &\to \mathbb{R}^m \\ 
+x &\to y=Ax 
+\end{align*}
+
+\begin{definition}[Range, Null Space, Rank, Nullity]
+Let $A \in \mathbb{R}^{m \times n}$. Then we define
+\begin{enumerate}
+\item The \textbf{range space} [值域] of $A$ by
+  \[
+   R(A) = \{ y \in \mathbb{R}^{m} \mid y = Ax \text{ for some } x \in \mathbb{R}^{n} \} \subseteq \mathbb{R}^{m}.
+   \]
+\item The \textbf{null space/kernel} [零空間/零核] of $A$ by
+  \[
+   N(A) = \{ x \in \mathbb{R}^{n} \mid Ax = 0 \} \subseteq \mathbb{R}^{n}.
+   \]
+\item The \textbf{rank} [秩] of $A$ by 
+  \[
+   \text{rank}(A) = \dim [R(A)] = \text{The number of maximal linearly independent columns of } A
+   \]
+\item The \textbf{nullity} of $A$ by 
+  \[
+   \text{nullity}(A) = \dim [N(A)] = \text{The number of maximal linearly independent vectors of } N(A).
+   \]
+\end{enumerate}
+\end{definition}
+
+\begin{theorem}[Dimension Theorem]
+    For any $A\in \mathbb{R}^{m\times n}$, $\text{nullity}(A) + \text{rank}(A) = n \text{ (column number)}$.
+\end{theorem} 
+\begin{theorem}[Equivalence of Nonsingular] 
+    Let $A\in \mathbb{R}^{n\times n}$. Then the following are equivalent.
+\begin{enumerate}
+\item $A$ is nonsingular. 
+\item $Ax=0$ has only the solution $x=0$.
+\item $Ax=b$ has a unique solution, for any $b\in\mathbb{R}^n$.
+\item $N(A) = \{0\}$.
+\item $R(A)= \mathbb{R}^n$.
+\item $\text{rank}(A) = n$.
+\item $\text{nullity}(A) = 0.$
+\item $\det(A) \neq 0.$
+\end{enumerate} 
+\end{theorem}
+
+\begin{definition}[Orthogonal, Orthonormal, Orthogonal Complement]
+    \begin{enumerate}
+\item Let $\{x_1, \ldots, x_p\} \subseteq \mathbb{R}^{n}$. Then $\{x_1, \ldots, x_p\}$ is said to be \textbf{orthogonal} [正交] if $x_i^T x_j = 0$, $\forall\; i \neq j$. 
+\item Let $\{x_1, \ldots, x_p\} \subseteq \mathbb{R}^{n}$. Then $\{x_1, \ldots, x_p\}$ is said to be \textbf{orthonormal} [單範正交] if $x_i^T x_j = 0$, $\forall\; i \neq j$, and  $x_i^T x_i = 1$, $\forall\; i=1,\ldots ,p$. 
+\item The \textbf{orthogonal complement} [正交補] of a set/space $S$ is defined by
+  \[
+   S^\perp = \{ y \in \mathbb{R}^{m} \mid y^T x = 0, \text{ for } x \in S \} = \text{orthogonal complement of } S.
+   \]
+\end{enumerate} 
+\end{definition} 
+
+\begin{theorem}[Relation between Range and Null Space of $A$ and $A^{T}$]
+
+    \begin{enumerate} 
+\item For any $A\in \mathbb{R}^{m\times n}$, $R(A^T) \perp N(A)$ and $R(A) \perp N(A^T)$.
+\item For any $A\in \mathbb{R}^{m\times n}$, $\text{rank}(A) = \text{rank}(A^T)$.
+
+\end{enumerate}  
+\end{theorem} 
+\begin{definition}[Symmetric/Hermitian, Definite, Normal, Orthogonal, Unitary] \begin{table}[!h]
+    \centering
+    \begin{tabular}{|l|c|c|} \hline 
+         &  $A \in \mathbb{R}^{n \times n}$& $A \in \mathbb{C}^{n \times n}$\\ \hline 
+         對稱&  \textbf{Symmetric}: $A^T = A$& \textbf{Hermitian}: $A^* = A (A^H = A)$\\ \hline 
+         反對稱&  \textbf{Skew-symmetric}: $A^T = -A$& \textbf{Skew-Hermitian}: $A^* = -A$\\ \hline 
+         Positive definite [正定]&  $x^T A x > 0$, $x \neq 0$& $x^* A x > 0$, $x \neq 0$\\ \hline 
+         Non-negative definite [非負定]&  $x^T A x \geq 0$& $x^* Ax \geq 0$\\ \hline 
+         Indefinite [不定] &  $(x^T A x)(y^T A y) < 0$ for some $x, y$& $(x^* A x)(y^* A y) < 0$ for some $x, y$\\ \hline 
+
+         Normal [正規]&  \multicolumn{2}{|c|}{$A^* A = A A^*$}\\ \hline 
+         正交&  \textbf{Orthogonal} [正交]: $A^TA=AA^T= I$& \textbf{Unitary} [么正]: $A^* A = A A^* = I$\\ \hline
+    \end{tabular}
+\end{table} 
+\end{definition}
+
+\begin{example}
+If $A=[a_{ij}]\in \mathbb{R}^{n\times n}$ is skew-symmetric, then show that
+\begin{enumerate}
+\item $a_{ii}=0$ for all $i=1,\ldots,n.$
+\item $x^TAx=0$ for all $x\in\mathbb{R}^n$.
+\end{enumerate}
+\end{example}
+
+\begin{example}
+If $A$ is skew-symmetric, then $I - A$ is nonsingular and $(I - A)^{-1} (I + A)$ is orthogonal (\textbf{Cayley transformation} of $S$).
+\end{example}
+
+\begin{proof} Hint:
+  \begin{enumerate}
+  \item $A=[a_{ij}]$ satisfies $a_{ij}= - a_{ji}$. So $a_{ii}=0$ for  all $i$.
+  \item $x^TAx=0$ for all $x\in \mathbb{R}^n$.
+  \item A matrix $A$ is singular $\Rightarrow$ $Av=0$ for some $v\neq 0$.
+  \end{enumerate}
+\end{proof}
+
+
+\subsection{特殊矩陣}
+
+\begin{definition}
+    Let $A \in \mathbb{R}^{m \times n}$. Then we say the matrix $A$ is
+    \begin{enumerate}
+\item \textbf{diagonal} [對角的] if ~$a_{ij} = 0$ for all $i \neq j$. Sometimes, to save the notations, we denote
+  \[
+    D =\begin{bmatrix} d_1 &0 &\cdots &\cdots  &0 \\ 0 &d_2 & 0 &\cdots &0\\ \vdots &\ddots &\ddots &\ddots &\vdots \\ \vdots &\ddots &\ddots & d_{n-1} & 0\\ 0 &\cdots &\cdots & 0 & d_n  \end{bmatrix}= \text{diag}(d_1, \ldots, d_n)
+   \]
+\item \textbf{(strictly) upper triangular} [(嚴格)上三角] if $a_{ij} = 0$ for $i > j$ (or $i \geq j$);
+  \[
+   \begin{bmatrix}
+   a_{11} & a_{12} & a_{13} & a_{14} \\
+   0 & a_{22} & a_{23} & a_{24} \\
+   0 & 0 & a_{33} & a_{34} \\
+   0 & 0 & 0 & a_{44}
+   \end{bmatrix}, \;\;
+   \begin{bmatrix}
+   0 & a_{12} & a_{13} & a_{14} \\
+   0 & 0 & a_{23} & a_{24} \\
+   0 & 0 & 0 & a_{34} \\
+   0 & 0 & 0 & 0
+   \end{bmatrix}
+   \]
+\item \textbf{(strictly) lower triangular} [(嚴格)下三角] if  $a_{ij} = 0$ for $i < j$ (or $i \leq j$);
+  \[
+   \begin{bmatrix}
+   a_{11} & 0 & 0 & 0 \\
+   a_{21} & a_{22} & 0 & 0 \\
+   a_{31} & a_{32} & a_{33} & 0 \\
+   a_{41} & a_{42} & a_{43} & a_{44}
+   \end{bmatrix},\;\;
+   \begin{bmatrix}
+   0 & 0 & 0 & 0 \\
+   a_{21} & 0 & 0 & 0 \\
+   a_{31} & a_{32} & 0 & 0 \\
+   a_{41} & a_{42} & a_{43} & 0
+   \end{bmatrix}
+   \]
+\item \textbf{tridiagonal} [三對角的] if $a_{ij} = 0$ for $|i-j| > 1$.
+  \[
+   \begin{bmatrix}
+   a_{11} & a_{12} & 0 & 0 \\
+   a_{21} & a_{22} & a_{23} & 0 \\
+   0 & a_{32} & a_{33} & a_{34} \\
+   0 & 0 & a_{43} & a_{44}
+   \end{bmatrix}
+   \]
+\item \textbf{upper bi-diagonal} [上雙對角的] if $a_{ij} = 0$ for $i > j$ or $j > i+1$.
+  \[
+   \begin{bmatrix}
+   a_{11} & a_{12} & 0 & 0 \\
+   0 & a_{22} & a_{23} & 0 \\
+   0 & 0 & a_{33} & a_{34} \\
+   0 & 0 & 0 & a_{44}
+   \end{bmatrix}
+   \]
+\item \textbf{upper Hessenberg} [上海森伯格] if $a_{ij} = 0$ for $i > j+1$. (Note: the lower case is the same as above.)
+  \[
+   \begin{bmatrix}
+   a_{11} & a_{12} & a_{13} & a_{14} \\
+   a_{21} & a_{22} & a_{23} & a_{24} \\
+   0 & a_{32} & a_{33} & a_{34} \\
+   0 & 0 & a_{43} & a_{44}
+   \end{bmatrix}
+   \]
+\item \textbf{sparse} [稀疏矩陣] if at most $n^{1+r}$ elements of $A \in \mathbb{R}^{m \times n}$ is nonzero, where $r < 1$ (usually between $0.2$ and $0.5$).
+    \begin{itemize}
+\item  For example, If $n = 1000, r = 0.9$, then $n^{1+r} = 501,187$.
+\end{itemize}
+\end{enumerate}
+\end{definition}
+
+\subsection{特徵值特徵、向量}
+
+\begin{definition}[Eigenvalues and Eigenvectors]
+    Let $A \in \mathbb{C}^{n \times n}$. Then $\lambda \in \mathbb{C}$ is called an \textbf{eigenvalue} [特徵值] of $A$ if there exists $x \neq 0, x \in \mathbb{C}^n$ such that
+\[
+Ax = \lambda x
+\]
+and $x$ is called an \textbf{eigenvector} [特徵向量] of $A$ corresponding to $\lambda$. We also call $(\lambda, x)$ be an \textbf{eigenpair} [特徵對] of $A$.
+\end{definition}
+
+\begin{definition}[Spectrum and Spectrum Radius]
+    Let $A \in \mathbb{C}^{n \times n}$. Then we define
+\begin{enumerate}
+\item $\sigma(A) := \text{Spectrum (譜) of } A = \text{The set of eigenvalues of } A$.
+\item $\rho(A) := \text{Sprctral Radius (譜半徑) of } A = \max \{ |\lambda| : \lambda \in \sigma(A) \}$.
+\end{enumerate}
+\end{definition}
+
+\textbf{Process To find (Exact) Eigenvalues and Eigenvectors of a Matrix}:
+Let $A \in \mathbb{C}^{n \times n}$.
+\begin{enumerate}
+\item Note that $\lambda \in \sigma(A) \Leftrightarrow \det(A - \lambda I) = 0$ .
+\item Define the \textbf{characteristic polynomial} [特徵多項式] of $A$ by $p(\lambda) = \det(\lambda I - A)$.
+\item Factor
+  \[
+   p(\lambda) = \prod_{i=1}^{s} (\lambda - \lambda_i)^{m(\lambda_i)}
+   \]
+  where $\lambda_i \neq \lambda_j$ (for $i \neq j$) and $\sum\limits_{i=1}^{s} m(\lambda_i) = n$.
+\item Then the set of \textbf{eigenvalues} of $A$ is $\sigma(A) = \{ \lambda_1,\lambda_2, \cdots, \lambda_s \}$ .
+\item Note that $Ax = \lambda x \Leftrightarrow  (A-\lambda I) x = 0$.
+\item For each eigenvalue $\lambda_i, i=1,\ldots,s,$ the set that collects all its corresponding \textbf{eigenvectors} is
+  \[
+   \{ v \neq 0 \mid (A-\lambda_i I) v =0 \}= \text{null}( A-\lambda_i I )- \{ 0 \}.
+   \]
+\end{enumerate}
+
+\begin{definition}[Algebraic Multiplicity and Geometric Multiplicity]
+    Let $A \in \mathbb{C}^{n \times n}$ and suppose the characteristic polynomial $p(\lambda)$ of $A$ is
+\[
+p(\lambda) = \prod_{i=1}^{s} (\lambda - \lambda_i)^{m(\lambda_i)}.
+\]
+Then, for each eigenvalue of $\lambda_i, i=1,\ldots,s,$ we say
+\begin{enumerate}
+\item $m(\lambda_i) =$ The \textbf{algebraic multiplicity} [代數重數] of $\lambda_i$.
+\item $n(\lambda_i) = \text{nullity}(A - \lambda_i I) =$ The \textbf{geometric multiplicity} [幾何重數] of $\lambda_i$.
+\end{enumerate}
+\end{definition}
+
+\begin{theorem}[Relation between Algebraic and Geometric Multiplicities]
+    Let $A \in \mathbb{C}^{n \times n}$. For each eigenvalue $\lambda_i$ of $A$, its algebraic multiplicity $m(\lambda_i)$ and geometric multiplicity $n(\lambda_i)$ satisfy
+\[
+1 \leq n(\lambda_i) \leq m(\lambda_i).
+\]
+\end{theorem}
+
+\subsection{對角化}
+
+\begin{definition}
+    \begin{enumerate}
+\item Let $A \in \mathbb{C}^{n \times n}$. If all eigenvalues $\lambda_i, i=1,\ldots,s,$ of $A$ satisfy $n(\lambda_i) = m(\lambda_i)$, then $A$ is called \textbf{diagonalizable} [可對角化的].
+  \begin{itemize}
+  \item In the case, we can find $n$ linearly independent eigenvalues for $A$.
+  \end{itemize}
+\item Let $A \in \mathbb{C}^{n \times n}$. If there is some eigenvalue $\lambda_i$ of $A$ such that $n(\lambda_i) < m(\lambda_i)$, then $A$ is called \textbf{degenerated} [退化的] or  \textbf{non-diagonalizable} [不可對角化的].
+  \begin{itemize}
+  \item    In the case, we can find less than $n$ linearly independent eigenvalues for $A$.  
+  \end{itemize}
+\end{enumerate}
+\end{definition}
+
+
+\begin{theorem}[Conditions for Diagonalizable]
+    Let $A \in \mathbb{C}^{n \times n}$. The following statements are equivalent:
+\begin{enumerate}
+\item $A$ is diagonalizable.
+\item For all eigenvalues $\lambda_i, i=1,\ldots,s,$ of $A$, $n(\lambda_i) = m(\lambda_i)$.
+\item There is an \textbf{invertible matrix} $V\in \mathbb{C}^{n \times n}$ and \textbf{diagonal matrix} $D\in \mathbb{C}^{n \times n}$ such that
+  \[
+   A = VDV^{-1} \; (\Longleftrightarrow V^{-1}AV = D
+   \Longleftrightarrow AV= VD, D:\text{ invertible}).
+   \]
+\end{enumerate}
+\end{theorem}
+
+For the expression $A = VDV^{-1}$. By letting $D=\text{diag}( \begin{bmatrix} d_1 &d_2 &\cdots &d_n \end{bmatrix} )$ and $V=\begin{bmatrix} v_1 \mid v_2 \mid \cdots \mid v_n \end{bmatrix}$,
+we have
+\begin{align*}
+A = VDV^{-1}
+&\Leftrightarrow AV= VD, \; V\text{: invertible} \\
+&\Leftrightarrow A \begin{bmatrix} v_1 \mid v_2 \mid \cdots \mid v_n \end{bmatrix}
+= \begin{bmatrix} v_1 \mid v_2 \mid \cdots \mid v_n \end{bmatrix} \cdot
+\text{diag}( \begin{bmatrix} d_1 &d_2 &\cdots &d_n \end{bmatrix} ), \; V\text{: invertible} \\
+&\Leftrightarrow
+\begin{bmatrix} Av_1 \mid Av_2 \mid \cdots \mid Av_n \end{bmatrix}
+= \begin{bmatrix} d_1v_1 \mid d_2v_2 \mid \cdots \mid d_nv_n \end{bmatrix}, \; V\text{: invertible} \\
+&\Leftrightarrow Av_1=dv_1, Av_2=dv_2\cdots, Av_n=dv_n, \; \{v_1,v_2,\cdots, v_n\}\text{: independent} \\
+&\Leftrightarrow Av_1=dv_1, Av_2=dv_2\cdots, Av_n=dv_n, \; \{v_1,v_2,\cdots, v_n\}\text{: independent}\\
+&\Leftrightarrow \exists \; (d_i, v_i), i=1,\ldots,n, \text{eigenpair of }A, \text{where} \{v_1,v_2,\cdots, v_n\}\text{: independent}.
+\end{align*}
+
+\begin{definition}[Diagonalization]
+    Let $A \in \mathbb{C}^{n \times n}$. Then the process to express $A=VDV^{-1}$ for some invertible $V$ and diagonal matrix $D$ is called the \textbf{diagonalization} [對角化] of $A$.
+\end{definition}
+
+\textbf{Process To find Diagonalization of a Matrix}
+Let $A \in \mathbb{C}^{n \times n}$.
+\begin{enumerate}
+\item Find the \textbf{characteristic polynomial} [特徵多項式] of $A$: $p(\lambda) = \det(\lambda I - A)$.
+\item Find all \textbf{eigenvalues} $\lambda_i, i=1,\ldots,s,$ of $A$ by factoring $p(\lambda) = \prod\limits_{i=1}^{s} (\lambda - \lambda_i)^{m(\lambda_i)}$.
+\item For each eigenvalue $\lambda_i, i=1,\ldots,s,$ find $n(\lambda_i)$'s \textbf{linearly independent eigenvectors} by finding
+   \begin{align*}
+   \{ v \neq 0 \mid (A-\lambda_i I) v =0 \} &= \text{null}( A-\lambda_i I )- \{ 0 \}\\
+   &= \text{span}( v^{(i)}_1, v^{(i)}_2, \cdots, v^{(i)}_{n(\lambda_i)} ) - \{ 0 \}.
+   \end{align*}
+\item If there is some eigenvalue $\lambda_i$ of $A$ such that $n(\lambda_i) < m(\lambda_i)$, then $A$ can Not be \textbf{diagonalized}. Otherwise, by letting
+   \begin{align*}
+   V &= \begin{bmatrix}
+   v^{(i)}_1, \cdots, v^{(i)}_{n(\lambda_i)} \mid\ldots \mid
+   v^{(s)}_1, \cdots, v^{(s)}_{n(\lambda_s)}
+   \end{bmatrix}\\
+   D &= \begin{bmatrix}
+   \lambda_1, \cdots, \lambda_1\mid \cdots \mid \lambda_s, \cdots, \lambda_s
+   \end{bmatrix}.
+   \end{align*}
+  Then $A=VDV^{-1}$.
+\end{enumerate}
+
+\begin{remark}
+    Only diagonalizable matrix can be derived the diagonalization $A=VDV^{-1}$, where $V\in \mathbb{C}^{n \times n}$ is \textbf{invertible} and $D\in \mathbb{C}^{n \times n}$ is \textbf{diagonal}.
+\end{remark}
+
+\subsection{Schur 分解}
+
+\begin{theorem}[Schur Lemma; Schur Decomposition]
+    \begin{enumerate}
+\item Let $A \in \mathbb{C}^{n \times n}$. There is an \textbf{unitary matrix} $U\in \mathbb{C}^{n \times n}$ and \textbf{upper triangular matrix} $R\in \mathbb{C}^{n \times n}$ such that
+  \[
+   A= URU^*.
+   \]
+  \begin{itemize}
+  \item Any \textbf{unitary matrix} $U$ satisfies $UU^*=U^*U=I$. Equivalently, $U^{-1}= U^*$.
+  \item The diagonal elements of $R$ are just eigenvalues of $A$.
+  \end{itemize}
+\end{enumerate}
+\end{theorem}
+
+\begin{theorem}[Unitary Diagonalizability for Normal and Hermitian; Orthogonal Diagonalizability for Symmetric Matrices]
+    \begin{enumerate}
+\item Let $A \in \mathbb{C}^{n \times n}$. Then A is \textbf{normal} $( \text{i.e., } AA^*=A^*A)$ $\Leftrightarrow$ There is an \textbf{unitary matrix} $U\in \mathbb{C}^{n \times n}$ and
+  \textbf{complex diagonal matrix} $D\in \mathbb{C}^{n \times n}$ such that $A = UDU^*$.
+  \begin{itemize}
+  \item It implies that $A$ has $n$ linearly independent eigenvectors $\{v_1,v_2,\cdots,v_n \}\subseteq \mathbb{C}^n$, which are  \textbf{orthonormal}.
+  \end{itemize}
+\item Let $A \in \mathbb{C}^{n \times n}$. Then $A$ is \textbf{Hermitian} $( \text{i.e., } A^*=A)$ $\Leftrightarrow$ there is an \textbf{unitary matrix} $U\in \mathbb{C}^{n \times n}$ and \textbf{real diagonal matrix} $D\in \mathbb{R}^{n \times n}$ such that $A = UDU^*$.
+  \begin{itemize}
+  \item All eigenvalues of \textbf{Hermitian matrices} are real. And the matrix exists eigenvectors    $\{v_1,v_2,\cdots,v_n \}\subseteq \mathbb{C}^n$, which are \textbf{orthonormal}.
+  \end{itemize}
+\item Let $A \in \mathbb{R}^{n \times n}$. Then $A$ is \textbf{symmetric} $\Leftrightarrow$ there is an \textbf{orthogonal matrix} $U\in \mathbb{R}^{n \times n}$ and \textbf{real diagonal matrix} $D\in \mathbb{R}^{n \times n}$ such that $A = UDU^*$.
+  \begin{itemize}
+  \item All eigenvalues of \textbf{symmetric matrices} are real. And the matrix exists eigenvectors $\{v_1,v_2,\cdots,v_n \}\subseteq \mathbb{R}^n$, which are  \textbf{orthonormal}.
+  \end{itemize}
+\end{enumerate}
+\end{theorem}
+
+
+\subsection{Jordan Form}
+
+\begin{theorem}
+    \begin{enumerate}
+\item [Recall] For any \textbf{diagonalizable} $A \in \mathbb{C}^{n \times n}$, we can find \textbf{invertible} $V\in \mathbb{C}^{n \times n}$ and \textbf{invertible matrix} $D\in \mathbb{C}^{n \times n}$ such that
+\[
+A= VDV^{-1}.
+\]
+\item  For any \textbf{(degenerated)} $A \in \mathbb{C}^{n \times n}$, we can find \textbf{invertible} $V\in \mathbb{C}^{n \times n}$ and \textbf{Jordan matrix} $J\in \mathbb{C}^{n \times n}$ such that
+\[
+A= VJV^{-1}.
+\]
+\end{enumerate}
+\end{theorem}
+
+\subsection{Real Diagonalization; Real Schur Decomposition; Real Jordan Form}
+
+\begin{theorem}
+    \begin{enumerate}
+\item  For any diagonalizable $A \in \mathbb{R}^{n \times n}$, there is an \textbf{invertible matrix} $V\in \mathbb{R}^{n \times n}$ and \textbf{block diagonalizable matrx} [塊對角] $D_B\in \mathbb{R}^{n \times n}$ such that
+  \[
+   A= VD_BV^{-1}.
+   \]
+\item For any $A \in \mathbb{R}^{n \times n}$, there is an \textbf{orthogonal matrix} $U\in \mathbb{R}^{n \times n}$ and \textbf{quasi-upper triangular} [類上三角]
+  $\bar{R}\in \mathbb{R}^{n \times n}$ such that
+  \[
+   A= U\bar{R}U^*.
+   \]
+  \begin{itemize}
+  \item    An example of quasi-upper triangular:
+  \end{itemize}
+  \[
+   \begin{bmatrix}
+   \lambda_1 & * & * & * \\
+   0 & \lambda_2 & * & * \\
+   0 & 0 & \alpha & \beta \\
+   0 & 0 & -\beta & \alpha
+   \end{bmatrix}
+   \]
+\item For any $A \in \mathbb{R}^{n \times n}$, there is an \textbf{invertible matrix} $V\in \mathbb{R}^{n \times n}$ and \textbf{real (block) Jordan matrix} $J\in \mathbb{R}^{n \times n}$
+  such that
+  \[
+   A= VJV^{-1}.
+   \]
+  \begin{itemize}
+  \item    An example of real Jordan matrix:
+  \end{itemize}
+  \[
+   J = \begin{bmatrix}
+   2 & 1 & 0 & 0 \\
+   0 & 2 & 0 & 0 \\
+   0 & 0 & 3 & 4 \\
+   0 & 0 & -4 & 3
+   \end{bmatrix}
+   \]
+\end{enumerate}
+\end{theorem}
+
+\end{document}
