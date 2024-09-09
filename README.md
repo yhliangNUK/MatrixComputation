@@ -4,7 +4,7 @@
    - 上課地點： C02-452
    - Email： yhliang@go.nuk.edu.tw
 2. 課程用書：
-   - Wen-Wei Lin, Lecture Notes of Matrix Computations, 2010.
+   - Wen-Wei Lin, Lecture Notes of Matrix Computations, 2010. [Link](https://math.ecnu.edu.cn/~jypan/Teaching/books/2013%20Matrix%20Computations%204th.pdf)
    - Gene H. Golub, Charles F. Van Loan, Matrix computations, 2013.
 3. 課程評分：
    - 出席 10% + 作業 60% + 期末報告 30％。
